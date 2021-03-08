@@ -35,6 +35,10 @@ macro(main)
   #
   # compiler and linker flags
   #
+  if (ANVILL_USE_SANITIZER)
+    include("cmake/sanitizers.cmake")
+    process_sanitizer(ANVILL)
+  endif()
 
   # Globally set the required C++ standard
   set(CMAKE_CXX_STANDARD 17)
@@ -46,7 +50,7 @@ macro(main)
     else()
       set(PLATFORM_NAME "linux")
     endif()
-  
+
   elseif(WIN32)
     set(PLATFORM_NAME "windows")
 
