@@ -59,26 +59,19 @@ function(append_if condition value)
   endif()
 endfunction()
 
-macro(add_flag_if_supported flag name)
-  check_c_compiler_flag("-Werror ${flag}" "C_SUPPORTS_${name}")
-  append_if("C_SUPPORTS_${name}" "${flag}" CMAKE_C_FLAGS)
-  check_cxx_compiler_flag("-Werror ${flag}" "CXX_SUPPORTS_${name}")
-  append_if("CXX_SUPPORTS_${name}" "${flag}" CMAKE_CXX_FLAGS)
-endmacro()
-
 macro(append_common_sanitizer_flags prefix)
   if (NOT MSVC)
     # Append -fno-omit-frame-pointer and turn on debug info to get better
     # stack traces.
-    add_flag_if_supported("-fno-omit-frame-pointer" FNO_OMIT_FRAME_POINTER)
-    add_flag_if_supported("-fno-optimize-sibling-calls" FNO_OPTIMIZE_SIBLING_CALLS)
+    append("-fno-omit-frame-pointer" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
+    append("-fno-optimize-sibling-calls" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
     if (NOT uppercase_CMAKE_BUILD_TYPE STREQUAL "DEBUG" AND
         NOT uppercase_CMAKE_BUILD_TYPE STREQUAL "RELWITHDEBINFO")
-      add_flag_if_supported("-gline-tables-only" GLINE_TABLES_ONLY)
+      append("-gline-tables-only" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
     endif()
     # Use -O1 even in debug mode, otherwise sanitizers slowdown is too large.
     if (uppercase_CMAKE_BUILD_TYPE STREQUAL "DEBUG" AND ${prefix}_OPTIMIZE_SANITIZED_BUILDS)
-      add_flag_if_supported("-O1" O1)
+      append("-O1" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
     endif()
   elseif (CLANG_CL)
     # Keep frame pointers around.
@@ -162,8 +155,7 @@ macro(process_sanitizer prefix)
 
   # Set a once non-default option for more detection
   if (${prefix}_USE_SANITIZER MATCHES "(Undefined;)?Address(;Undefined)?")
-    add_flag_if_supported("-fsanitize-address-use-after-scope"
-                          FSANITIZE_USE_AFTER_SCOPE_FLAG)
+    append("-fsanitize-address-use-after-scope" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
   endif()
 
   # Set if libFuzzer-required instrumentation, no linking.
